@@ -126,6 +126,57 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedCell = null;   // Sector View
     let selectedPlanet = null; // System View
 
+    // === Icosahedron Geometry Init ===
+    let verts = [];
+    function init3DGeometry() {
+        const t = (1.0 + Math.sqrt(5.0)) / 2.0;
+        const lat = Math.atan(0.5);
+        const yRing = Math.sin(lat);
+        const rRing = Math.cos(lat);
+        
+        verts = [];
+        verts.push({x:0, y:1, z:0}); // 0: Top
+        for(let i=0; i<5; i++){ 
+            const theta = (i * 2 * Math.PI / 5);
+            verts.push({x: rRing*Math.cos(theta), y: yRing, z: rRing*Math.sin(theta)}); // 1-5: Upper Ring
+        }
+        for(let i=0; i<5; i++){ 
+            const theta = (i * 2 * Math.PI / 5) + (Math.PI/5);
+            verts.push({x: rRing*Math.cos(theta), y: -yRing, z: rRing*Math.sin(theta)}); // 6-10: Lower Ring
+        }
+        verts.push({x:0, y:-1, z:0}); // 11: Bottom
+    }
+    init3DGeometry();
+
+    // === Palettes ===
+    const palettes = {
+        terran: {
+            oceanDeep: '#aed9e0', oceanShallow: '#caf0f8',
+            land: '#b7e4c7', forest: '#74c69d', mountain: '#adb5bd', peak: '#ffffff',
+            ice: '#f8f9fa', grid: 'rgba(0,0,0,0.15)', border: '#000000'
+        },
+        arid: {
+            oceanDeep: '#e6ccb2', oceanShallow: '#ede0d4',
+            land: '#fff6b6', forest: '#cab172', mountain: '#d4a373', peak: '#faedcd',
+            ice: '#ffffff', grid: 'rgba(0,0,0,0.15)', border: '#000000'
+        },
+        frozen: {
+            oceanDeep: '#90e0ef', oceanShallow: '#caf0f8',
+            land: '#e0fbfc', forest: '#ffffff', mountain: '#ced4da', peak: '#ffffff',
+            ice: '#ffffff', grid: 'rgba(0,0,0,0.15)', border: '#000000'
+        },
+        toxic: {
+            oceanDeep: '#7d93ff', oceanShallow: '#40a8fd',
+            land: '#adfded', forest: '#2ec4b6', mountain: '#726a7b', peak: '#535353',
+            ice: '#ffffff', grid: 'rgba(0,0,0,0.15)', border: '#000000'
+        },
+        volcanic: {
+            oceanDeep: '#6c757d', oceanShallow: '#adb5bd',
+            land: '#dee2e6', forest: '#ced4da', mountain: '#495057', peak: '#ffadad',
+            ice: '#e9ecef', grid: 'rgba(0,0,0,0.15)', border: '#000000'
+        }
+    };
+
     // --- System Navigation ---
     function enterSystem(systemData) {
         savedSectorCamera = { ...camera };
@@ -142,11 +193,26 @@ document.addEventListener('DOMContentLoaded', () => {
             let currentRadius = 150; 
             for (let i = 0; i < planetCount; i++) {
                 currentRadius += Math.floor(Math.random() * 150) + 100;
+                
+                // Generate Atmosphere & Biome Data
+                const types = ['Terran', 'Arid', 'Frozen', 'Volcanic', 'Toxic'];
+                const type = types[Math.floor(Math.random() * types.length)];
+                
+                let atmosphere = 'Nitrogen-Oxygen';
+                if(type === 'Volcanic') atmosphere = 'Volcanic';
+                else if(type === 'Toxic') atmosphere = 'Toxic';
+                else if(type === 'Arid') atmosphere = 'Thin';
+                else if(type === 'Frozen') atmosphere = 'Thin';
+
                 activeSystem.details.planets.push({
                     id: i, // ID for easier lookup
                     orbitRadius: currentRadius,
                     angle: Math.random() * Math.PI * 2,
-                    size: Math.floor(Math.random() * 4) + 6
+                    size: Math.floor(Math.random() * 4) + 6,
+                    seed: Math.floor(Math.random() * 10000),
+                    hydro: Math.floor(Math.random() * 100),
+                    atmosphere: atmosphere,
+                    type: type
                 });
             }
             activeSystem.details.systemRadius = currentRadius + 300;
@@ -350,9 +416,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="material-icons text-sm">public</span> PLANET P-${activePlanet.id}
                     </div>
                     <div class="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                        Type: ${activePlanet.type}<br>
                         Orbit Radius: ${activePlanet.orbitRadius}<br>
-                        Size Class: ${activePlanet.size}
+                        Atmosphere: ${activePlanet.atmosphere}
                     </div>
+                </div>
+                <div class="mt-4 border-t border-gray-200 dark:border-zinc-700 pt-2">
+                     <div class="text-xs text-gray-500 italic">Planetary Grid: Icosahedral Projection</div>
                 </div>
             `;
             return;
@@ -377,7 +447,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <span class="material-icons text-sm">public</span> SELECTED PLANET
                         </div>
                         <div class="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                            A terrestrial world in orbit.<br>
+                            Type: ${selectedPlanet.type}<br>
                             Click enter to initiate landing sequence.
                         </div>
                     </div>
@@ -529,10 +599,214 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.restore();
     }
 
+    /*
+     * drawPlanet: Renders an Icosahedral Map using Barycentric Projection.
+     */
     function drawPlanet() {
-        // Placeholder for planet view
-        // Just empty space for now as requested
-        // We could add some grid lines or something later
+        // --- 1. Map Layout Calculations ---
+        // We define the layout based on the "baseHexCount" to determine grid density
+        const baseHexCount = 50; 
+        
+        // Define map dimensions to fit comfortably at default zoom
+        // Total map width is 5.5 * Side Length.
+        // We approximate Side Length (S) to be reasonable.
+        const S = 300; 
+        const H = S * (Math.sqrt(3) / 2);
+        
+        const mapW = 5.5 * S;
+        const mapH = 3 * H;
+        
+        // Center the map at (0,0) in our camera world space
+        const startX = -mapW / 2;
+        const startY = -mapH / 2;
+        
+        // Determine hex geometry based on S and desired count
+        const targetHexW = S / 10; // Approx 10 hexes per side
+        const hexWidth = targetHexW;
+        const hexRadius = hexWidth / Math.sqrt(3);
+
+        const V = verts;
+
+        // --- 2. Select Palette ---
+        let colors = palettes.terran;
+        if (activePlanet) {
+            const atm = activePlanet.atmosphere.toLowerCase();
+            const type = activePlanet.type ? activePlanet.type.toLowerCase() : 'terran';
+
+            if (atm.includes('volcanic') || type.includes('volcanic')) colors = palettes.volcanic;
+            else if (atm.includes('toxic') || type.includes('toxic')) colors = palettes.toxic;
+            else if (type.includes('arid')) colors = palettes.arid;
+            else if (type.includes('frozen')) colors = palettes.frozen;
+        }
+
+        // --- 3. Draw 5 Gores ---
+        for(let i = 0; i < 5; i++) {
+            const xBase = startX + i * S;
+            const nextI = (i + 1) % 5;
+            
+            // Indices for the vertices
+            const upCurrent = i + 1; 
+            const upNext = nextI + 1;
+            const lowCurrent = i + 6; 
+            const lowNext = nextI + 6;
+            const lowNextPlus = ((i + 2) % 5) + 6; 
+
+            // Triangle 1: North Polar (Up)
+            // Verts: Top (0), UpCurrent, UpNext
+            // Wait, standard winding order?
+            // V[0] is top.
+            drawLocalTriangle(xBase, startY + H, S, H, 'up', V[upCurrent], V[upNext], V[0], colors, hexRadius);
+            
+            // Triangle 2: North Temperate (Down)
+            // Verts: UpCurrent, UpNext, LowNext
+            // Connects two upper ring to one lower ring?
+            // Actually, in standard numbering:
+            // 0 is top. 1-5 upper ring. 6-10 lower ring. 11 bottom.
+            // A 'Down' triangle here shares the top edge with T1's base? No.
+            // It sits between the upper ring points.
+            drawLocalTriangle(xBase, startY + H, S, H, 'down', V[upCurrent], V[upNext], V[lowNext], colors, hexRadius);
+            
+            // Triangle 3: South Temperate (Up)
+            // Verts: LowNext, LowNextPlus, UpNext
+            drawLocalTriangle(xBase + S/2, startY + 2*H, S, H, 'up', V[lowNext], V[lowNextPlus], V[upNext], colors, hexRadius);
+            
+            // Triangle 4: South Polar (Down)
+            // Verts: LowNext, LowNextPlus, Bottom (11)
+            drawLocalTriangle(xBase + S/2, startY + 2*H, S, H, 'down', V[lowNext], V[lowNextPlus], V[11], colors, hexRadius);
+        }
+    }
+
+    function drawLocalTriangle(offsetX, offsetY, S, H, orientation, v1, v2, v3, colors, hexRadius) {
+        ctx.save();
+        ctx.translate(offsetX, offsetY);
+        
+        // Define Triangle Shape (Clipping Mask)
+        let tX1, tY1, tX2, tY2, tX3, tY3;
+        if (orientation === 'up') {
+            tX1 = 0; tY1 = 0; 
+            tX2 = S; tY2 = 0; 
+            tX3 = S/2; tY3 = -H;  
+        } else {
+            tX1 = 0; tY1 = 0; 
+            tX2 = S; tY2 = 0; 
+            tX3 = S/2; tY3 = H;   
+        }
+
+        ctx.beginPath();
+        ctx.moveTo(tX1, tY1);
+        ctx.lineTo(tX2, tY2);
+        ctx.lineTo(tX3, tY3);
+        ctx.closePath();
+        
+        // Clip to triangle
+        ctx.clip();
+
+        // Fill background
+        ctx.fillStyle = colors.oceanDeep;
+        ctx.fillRect(0, -H, S, 2*H); // generous fill
+
+        const hexW = Math.sqrt(3) * hexRadius;
+        const vertDist = 1.5 * hexRadius;
+        
+        // Calculate Grid Bounds (relative to local triangle origin)
+        const rows = Math.ceil(H / vertDist) + 2;
+        const cols = Math.ceil(S / hexW) + 2;
+
+        for (let row = -rows; row < rows; row++) {
+            const xOffset = (row % 2) * (hexW / 2);
+            for (let col = -2; col < cols; col++) {
+                const cx = col * hexW + xOffset;
+                const cy = row * vertDist;
+
+                // Barycentric Mapping
+                const {u, v, w} = getBarycentric(cx, cy, tX1, tY1, tX2, tY2, tX3, tY3);
+                
+                // Culling: If significantly outside triangle, skip
+                if (u < -0.1 || v < -0.1 || w < -0.1) continue;
+
+                // Interpolate 3D position
+                const p3 = {
+                    x: u*v1.x + v*v2.x + w*v3.x,
+                    y: u*v1.y + v*v2.y + w*v3.y,
+                    z: u*v1.z + v*v2.z + w*v3.z
+                };
+
+                // Sample Noise
+                const noiseVal = get3DNoise(p3.x, p3.y, p3.z);
+                
+                // Determine Color
+                let color = null;
+                const seed = activePlanet ? activePlanet.seed : 0;
+                const hydro = activePlanet ? activePlanet.hydro : 50;
+                const waterLevel = hydro / 100.0;
+                
+                // Color Logic
+                if (Math.abs(p3.y) > 0.90) { color = colors.ice; } 
+                else if (noiseVal > (waterLevel + 0.4)) { color = colors.peak; }
+                else if (noiseVal > (waterLevel + 0.2)) { color = colors.mountain; }
+                else if (noiseVal > (waterLevel + 0.1)) { color = colors.forest; }
+                else if (noiseVal > waterLevel) { color = colors.land; }
+                else if (noiseVal > (waterLevel - 0.1)) { color = colors.oceanShallow; } 
+                // else deep ocean (null/background)
+
+                if (color) {
+                    drawHex(cx, cy, hexRadius, color, colors.grid);
+                } else {
+                    drawHex(cx, cy, hexRadius, null, colors.grid);
+                }
+            }
+        }
+        
+        // Draw Border
+        ctx.beginPath();
+        ctx.moveTo(tX1, tY1);
+        ctx.lineTo(tX2, tY2);
+        ctx.lineTo(tX3, tY3);
+        ctx.closePath();
+        ctx.strokeStyle = colors.border;
+        ctx.lineWidth = 2; 
+        ctx.stroke();
+
+        ctx.restore();
+    }
+
+    function drawHex(cx, cy, r, fillColor, strokeColor) {
+        ctx.beginPath();
+        for (let k = 0; k < 6; k++) {
+            const ang = Math.PI/3 * k + Math.PI/6;
+            ctx.lineTo(cx + r*Math.cos(ang), cy + r*Math.sin(ang));
+        }
+        ctx.closePath();
+        if (fillColor) {
+            ctx.fillStyle = fillColor;
+            ctx.fill();
+        }
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+    }
+
+    function getBarycentric(px, py, x1, y1, x2, y2, x3, y3) {
+        const detT = (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3);
+        const u = ((y2 - y3) * (px - x3) + (x3 - x2) * (py - y3)) / detT;
+        const v = ((y3 - y1) * (px - x3) + (x1 - x3) * (py - y3)) / detT;
+        const w = 1 - u - v;
+        return { u, v, w };
+    }
+
+    function get3DNoise(x, y, z) {
+        const seed = activePlanet ? activePlanet.seed : 1234;
+        const len = Math.sqrt(x*x + y*y + z*z);
+        // Normalize
+        const nx = x/len; const ny = y/len; const nz = z/len;
+        
+        let val = 0;
+        val += Math.sin(nx*3 + seed) * Math.cos(ny*3 - seed) * Math.sin(nz*3 + seed);
+        val += 0.5 * (Math.sin(nx*8 + seed*2) + Math.cos(ny*8 + seed));
+        val += 0.2 * Math.sin((nx+ny+nz)*15 + seed);
+        
+        // Normalize roughly to 0..1
+        return (val + 1.5) / 3.0;
     }
 
     function drawSystem() {
@@ -576,6 +850,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // Planet Body
             ctx.beginPath();
             ctx.arc(px, py, planet.size, 0, Math.PI * 2);
+            ctx.fillStyle = "#ffffff";
+            ctx.fill();
             ctx.stroke(); 
         });
 
