@@ -21,3 +21,15 @@
 .tech-border {
     box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
 }
+
+/* Map Canvas specific styles */
+#map-canvas {
+    image-rendering: pixelated; /* Keeps lines sharp */
+    cursor: grab; /* Default cursor indicates it can be moved */
+    touch-action: none; /* Prevents default touch scrolling on mobile */
+}
+
+/* Class applied via JS when dragging */
+#map-canvas.grabbing {
+    cursor: grabbing;
+}

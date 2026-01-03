@@ -16,6 +16,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from django.conf import settings
+from django.conf.urls.static import static
 
 # We need to import the views from our game app so we can link to them.
 from game import views
@@ -29,3 +31,7 @@ urlpatterns = [
     # It calls the 'index' function inside our views file.
     path('', views.index, name='index'),
 ]
+
+# This helper allows Django to serve static files (CSS/JS) during development
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
