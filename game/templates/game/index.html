@@ -6,11 +6,13 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>Main Control Panel Interface</title>
     
+    <script src="{% static 'game/config.js' %}"></script>
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
 
-    <script src="{% static 'game/script.js' %}" defer></script>
+    <script type="module" src="{% static 'game/main.js' %}"></script>
     <link rel="stylesheet" href="{% static 'game/style.css' %}">
 </head>
 <body class="bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-200 h-screen w-screen overflow-hidden flex flex-col font-body transition-colors duration-300">
@@ -57,7 +59,7 @@
                     <span class="w-2 h-6 bg-primary rounded-sm"></span>
                     Panel 1
                 </h2>
-                <div id="panel-1-content" class="flex-1 bg-gray-100 dark:bg-zinc-900/50 rounded border border-gray-200 dark:border-zinc-800 p-4 font-display text-sm text-gray-500 dark:text-gray-400 overflow-y-auto">
+                <div id="panel-1-content" class="flex-1 bg-gray-100 dark:bg-zinc-900/50 rounded border border-gray-200 dark:border-zinc-800 p-4 font-display text-sm text-gray-500 dark:text-gray-300 overflow-y-auto">
                     <p class="opacity-50 italic">Select a grid cell to view details.</p>
                 </div>
             </div>
