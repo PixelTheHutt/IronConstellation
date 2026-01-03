@@ -24,7 +24,7 @@
 
 /* Map Canvas specific styles */
 #map-canvas {
-    image-rendering: pixelated; /* Keeps lines sharp */
+    /* Removed image-rendering: pixelated to allow smooth vector graphics on high-DPI displays */
     cursor: grab; /* Default cursor indicates it can be moved */
     touch-action: none; /* Prevents default touch scrolling on mobile */
 }
