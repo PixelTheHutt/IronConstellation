@@ -1,0 +1,13 @@
+# This will ignore the virtual environment directory
+venv/
+env/
+
+# This will ignore compiled python files
+__pycache__/
+*.pyc
+
+# This will ignore local database (optional, but recommended)
+db.sqlite3
+
+# This will ignore OS generated files
+.DS_Store

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Main Control Panel Interface</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#3b82f6", // Blue-500
+                        "background-light": "#e5e7eb", // Gray-200
+                        "background-dark": "#18181b", // Zinc-900
+                        "panel-light": "#f3f4f6", // Gray-100
+                        "panel-dark": "#27272a", // Zinc-800
+                        "border-light": "#d1d5db", // Gray-300
+                        "border-dark": "#3f3f46", // Zinc-700
+                    },
+                    fontFamily: {
+                        display: ["'JetBrains Mono'", "monospace"],
+                        body: ["'Inter'", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.25rem",
+                    },
+                },
+            },
+        };
+    </script>
+<style>::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #27272a; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #52525b; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #71717a; 
+        }
+        .tech-border {
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-200 h-screen w-screen overflow-hidden flex flex-col font-body transition-colors duration-300">
+<header class="h-16 flex-none bg-panel-light dark:bg-zinc-900 border-b border-gray-300 dark:border-zinc-700 flex items-center justify-between px-4 gap-4 shadow-md z-10">
+<nav class="flex items-center gap-1 flex-1 overflow-x-auto no-scrollbar">
+<button class="bg-gray-300 hover:bg-gray-400 dark:bg-zinc-800 dark:hover:bg-zinc-700 px-6 py-2 text-sm font-bold uppercase tracking-wider border-b-4 border-gray-400 dark:border-zinc-600 rounded-t-sm transition-colors flex items-center gap-2 whitespace-nowrap">
+<span class="material-icons text-base">account_balance</span> Economy
+            </button>
+<button class="bg-gray-300 hover:bg-gray-400 dark:bg-zinc-800 dark:hover:bg-zinc-700 px-6 py-2 text-sm font-bold uppercase tracking-wider border-b-4 border-primary dark:border-primary rounded-t-sm transition-colors flex items-center gap-2 whitespace-nowrap text-primary dark:text-blue-400 bg-blue-50 dark:bg-zinc-800/80">
+<span class="material-icons text-base">map</span> Map
+            </button>
+<button class="bg-gray-300 hover:bg-gray-400 dark:bg-zinc-800 dark:hover:bg-zinc-700 px-6 py-2 text-sm font-bold uppercase tracking-wider border-b-4 border-gray-400 dark:border-zinc-600 rounded-t-sm transition-colors flex items-center gap-2 whitespace-nowrap">
+<span class="material-icons text-base">handshake</span> Diplomacy
+            </button>
+<button class="bg-gray-300 hover:bg-gray-400 dark:bg-zinc-800 dark:hover:bg-zinc-700 px-6 py-2 text-sm font-bold uppercase tracking-wider border-b-4 border-gray-400 dark:border-zinc-600 rounded-t-sm transition-colors flex items-center gap-2 whitespace-nowrap">
+<span class="material-icons text-base">info</span> Information
+            </button>
+</nav>
+<div class="flex items-center gap-3">
+<button class="w-10 h-10 rounded-full bg-gray-300 dark:bg-zinc-800 border-2 border-gray-400 dark:border-zinc-600 flex items-center justify-center font-display font-bold text-xs hover:border-primary dark:hover:border-primary transition-colors shadow-inner">
+                B4
+            </button>
+<button class="w-10 h-10 rounded-full bg-gray-300 dark:bg-zinc-800 border-2 border-gray-400 dark:border-zinc-600 flex items-center justify-center font-display font-bold text-xs hover:border-primary dark:hover:border-primary transition-colors shadow-inner">
+                B5
+            </button>
+<button class="w-10 h-10 rounded-full bg-gray-300 dark:bg-zinc-800 border-2 border-gray-400 dark:border-zinc-600 flex items-center justify-center font-display font-bold text-xs hover:border-primary dark:hover:border-primary transition-colors shadow-inner">
+                B6
+            </button>
+</div>
+<div class="flex items-center gap-2">
+<button class="bg-gray-300 hover:bg-gray-400 dark:bg-zinc-800 dark:hover:bg-zinc-700 px-4 py-2 text-sm font-bold border border-gray-400 dark:border-zinc-600 rounded shadow-sm transition-colors flex items-center gap-2">
+<span class="material-icons text-base">person</span> Account
+            </button>
+<button class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 text-sm font-bold border border-red-700 rounded shadow-sm transition-colors flex items-center gap-2">
+<span class="material-icons text-base">logout</span> Logout
+            </button>
+</div>
+</header>
+<main class="flex-1 p-3 grid grid-cols-12 gap-3 overflow-hidden min-h-0 bg-gray-200 dark:bg-black/20">
+<aside class="col-span-12 md:col-span-3 lg:col-span-3 flex flex-col gap-2 min-h-0 h-full">
+<div class="flex-1 bg-white dark:bg-panel-dark border border-gray-300 dark:border-zinc-700 rounded-lg p-4 flex flex-col shadow-sm relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-2 opacity-50 font-display text-xs text-gray-400">P-01</div>
+<h2 class="text-xl font-bold mb-4 flex items-center gap-2 text-gray-700 dark:text-gray-200">
+<span class="w-2 h-6 bg-primary rounded-sm"></span>
+                    Resource Monitor
+                </h2>
+<div class="flex-1 bg-gray-100 dark:bg-zinc-900/50 rounded border border-gray-200 dark:border-zinc-800 p-4 font-display text-sm text-gray-500 dark:text-gray-400 overflow-y-auto">
+<div class="flex justify-between mb-2"><span>Energy</span><span class="text-green-500">98%</span></div>
+<div class="w-full bg-gray-300 dark:bg-zinc-700 h-1 rounded mb-4"><div class="bg-green-500 h-1 rounded" style="width: 98%"></div></div>
+<div class="flex justify-between mb-2"><span>Fuel</span><span class="text-yellow-500">45%</span></div>
+<div class="w-full bg-gray-300 dark:bg-zinc-700 h-1 rounded mb-4"><div class="bg-yellow-500 h-1 rounded" style="width: 45%"></div></div>
+<div class="flex justify-between mb-2"><span>Oxygen</span><span class="text-blue-500">82%</span></div>
+<div class="w-full bg-gray-300 dark:bg-zinc-700 h-1 rounded mb-4"><div class="bg-blue-500 h-1 rounded" style="width: 82%"></div></div>
+</div>
+</div>
+<div class="grid grid-cols-6 gap-1 h-10 flex-none">
+<button class="bg-gray-300 dark:bg-zinc-800 hover:bg-gray-400 dark:hover:bg-zinc-700 border border-gray-400 dark:border-zinc-600 rounded text-[10px] font-display font-bold text-center flex items-center justify-center transition-colors">B7</button>
+<button class="bg-gray-300 dark:bg-zinc-800 hover:bg-gray-400 dark:hover:bg-zinc-700 border border-gray-400 dark:border-zinc-600 rounded text-[10px] font-display font-bold text-center flex items-center justify-center transition-colors">B8</button>
+<button class="bg-gray-300 dark:bg-zinc-800 hover:bg-gray-400 dark:hover:bg-zinc-700 border border-gray-400 dark:border-zinc-600 rounded text-[10px] font-display font-bold text-center flex items-center justify-center transition-colors">B9</button>
+<button class="bg-gray-300 dark:bg-zinc-800 hover:bg-gray-400 dark:hover:bg-zinc-700 border border-gray-400 dark:border-zinc-600 rounded text-[10px] font-display font-bold text-center flex items-center justify-center transition-colors">B10</button>
+<button class="bg-gray-300 dark:bg-zinc-800 hover:bg-gray-400 dark:hover:bg-zinc-700 border border-gray-400 dark:border-zinc-600 rounded text-[10px] font-display font-bold text-center flex items-center justify-center transition-colors">B11</button>
+<button class="bg-gray-300 dark:bg-zinc-800 hover:bg-gray-400 dark:hover:bg-zinc-700 border border-gray-400 dark:border-zinc-600 rounded text-[10px] font-display font-bold text-center flex items-center justify-center transition-colors">B12</button>
+</div>
+<div class="flex-1 bg-white dark:bg-panel-dark border border-gray-300 dark:border-zinc-700 rounded-lg p-4 flex flex-col shadow-sm relative overflow-hidden">
+<div class="absolute top-0 right-0 p-2 opacity-50 font-display text-xs text-gray-400">P-02</div>
+<h2 class="text-xl font-bold mb-4 flex items-center gap-2 text-gray-700 dark:text-gray-200">
+<span class="w-2 h-6 bg-orange-500 rounded-sm"></span>
+                    Local Systems
+                </h2>
+<div class="flex-1 flex flex-col gap-2 overflow-y-auto">
+<div class="bg-gray-100 dark:bg-zinc-900/50 p-2 rounded border border-gray-200 dark:border-zinc-800 flex items-center gap-3">
+<span class="material-icons text-green-500 text-sm">check_circle</span>
+<span class="text-sm font-display">Life Support</span>
+</div>
+<div class="bg-gray-100 dark:bg-zinc-900/50 p-2 rounded border border-gray-200 dark:border-zinc-800 flex items-center gap-3">
+<span class="material-icons text-green-500 text-sm">check_circle</span>
+<span class="text-sm font-display">Gravity Gen</span>
+</div>
+<div class="bg-gray-100 dark:bg-zinc-900/50 p-2 rounded border border-gray-200 dark:border-zinc-800 flex items-center gap-3">
+<span class="material-icons text-red-500 text-sm animate-pulse">warning</span>
+<span class="text-sm font-display">Shield Array</span>
+</div>
+</div>
+</div>
+</aside>
+<section class="col-span-12 md:col-span-6 lg:col-span-7 h-full flex flex-col">
+<div class="flex-1 bg-white dark:bg-zinc-900 border-2 border-gray-300 dark:border-zinc-600 rounded-lg shadow-lg relative overflow-hidden flex flex-col">
+<div class="absolute top-4 left-4 bg-gray-200 dark:bg-zinc-800/80 px-3 py-1 rounded text-xs font-display text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-zinc-700 backdrop-blur-sm z-10">
+                    LIVE FEED: SECTOR 7G
+                </div>
+<div class="flex-1 relative bg-gray-50 dark:bg-[#0c0c0e] flex items-center justify-center overflow-hidden group">
+<div class="absolute inset-0" style="background-image: radial-gradient(circle, #52525b 1px, transparent 1px); background-size: 40px 40px; opacity: 0.2;"></div>
+<div class="relative w-64 h-64 border border-primary/30 rounded-full flex items-center justify-center animate-[spin_10s_linear_infinite]">
+<div class="w-48 h-48 border border-primary/50 rounded-full border-dashed"></div>
+</div>
+<div class="absolute text-4xl font-display font-bold tracking-widest text-gray-400 dark:text-gray-600 select-none pointer-events-none">
+                        MAIN DISPLAY
+                    </div>
+<div class="absolute bottom-4 right-4 text-right">
+<div class="text-xs font-display text-primary mb-1">COORDINATES</div>
+<div class="text-lg font-mono font-bold">X: 492.21 Y: -12.99</div>
+</div>
+</div>
+</div>
+</section>
+<aside class="col-span-12 md:col-span-3 lg:col-span-2 flex flex-col gap-2 min-h-0 h-full">
+<div class="grid grid-cols-3 gap-1 h-10 flex-none">
+<button class="bg-gray-300 dark:bg-zinc-800 hover:bg-gray-400 dark:hover:bg-zinc-700 border border-gray-400 dark:border-zinc-600 rounded text-xs font-display font-bold flex items-center justify-center transition-colors">B1</button>
+<button class="bg-gray-300 dark:bg-zinc-800 hover:bg-gray-400 dark:hover:bg-zinc-700 border border-gray-400 dark:border-zinc-600 rounded text-xs font-display font-bold flex items-center justify-center transition-colors">B2</button>
+<button class="bg-gray-300 dark:bg-zinc-800 hover:bg-gray-400 dark:hover:bg-zinc-700 border border-gray-400 dark:border-zinc-600 rounded text-xs font-display font-bold flex items-center justify-center transition-colors">B3</button>
+</div>
+<div class="flex-1 bg-white dark:bg-panel-dark border border-gray-300 dark:border-zinc-700 rounded-lg p-4 flex flex-col shadow-sm relative overflow-hidden">
+<div class="absolute top-0 right-0 p-2 opacity-50 font-display text-xs text-gray-400">P-03</div>
+<h2 class="text-xl font-bold mb-4 flex items-center gap-2 text-gray-700 dark:text-gray-200">
+<span class="w-2 h-6 bg-purple-500 rounded-sm"></span>
+                    Communications
+                </h2>
+<div class="flex-1 overflow-y-auto space-y-2 pr-1">
+<div class="bg-gray-100 dark:bg-zinc-900/50 p-3 rounded-lg border border-gray-200 dark:border-zinc-800 text-sm">
+<div class="flex justify-between items-center mb-1">
+<span class="font-bold text-xs text-primary">CMD Center</span>
+<span class="text-[10px] text-gray-500">10:42</span>
+</div>
+<p class="text-gray-600 dark:text-gray-400 leading-tight">Status report requested for sector 7G.</p>
+</div>
+<div class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-800 text-sm ml-4">
+<div class="flex justify-between items-center mb-1">
+<span class="font-bold text-xs text-blue-600 dark:text-blue-400">Unit Alpha</span>
+<span class="text-[10px] text-gray-500">10:44</span>
+</div>
+<p class="text-gray-600 dark:text-gray-300 leading-tight">All systems nominal. Proceeding with scan.</p>
+</div>
+<div class="bg-gray-100 dark:bg-zinc-900/50 p-3 rounded-lg border border-gray-200 dark:border-zinc-800 text-sm">
+<div class="flex justify-between items-center mb-1">
+<span class="font-bold text-xs text-primary">CMD Center</span>
+<span class="text-[10px] text-gray-500">10:45</span>
+</div>
+<p class="text-gray-600 dark:text-gray-400 leading-tight">Copy that. Stand by for telemetry.</p>
+</div>
+<div class="bg-gray-100 dark:bg-zinc-900/50 p-3 rounded-lg border border-gray-200 dark:border-zinc-800 text-sm opacity-50">
+<div class="flex justify-between items-center mb-1">
+<span class="font-bold text-xs text-primary">CMD Center</span>
+<span class="text-[10px] text-gray-500">09:12</span>
+</div>
+<p class="text-gray-600 dark:text-gray-400 leading-tight">Previous logs archived.</p>
+</div>
+</div>
+</div>
+</aside>
+</main>
+<footer class="h-16 flex-none bg-panel-light dark:bg-zinc-900 border-t border-gray-300 dark:border-zinc-700 flex items-center px-4 gap-4 z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+<div class="flex-1 grid grid-cols-5 gap-2 h-10">
+<button class="bg-gray-300 hover:bg-gray-400 dark:bg-zinc-800 dark:hover:bg-zinc-700 border-b-4 border-gray-400 dark:border-zinc-600 rounded-sm text-sm font-bold uppercase tracking-wide flex items-center justify-center transition-all active:border-b-0 active:translate-y-1">
+                Logs
+            </button>
+<button class="bg-gray-300 hover:bg-gray-400 dark:bg-zinc-800 dark:hover:bg-zinc-700 border-b-4 border-gray-400 dark:border-zinc-600 rounded-sm text-sm font-bold uppercase tracking-wide flex items-center justify-center transition-all active:border-b-0 active:translate-y-1">
+                Config
+            </button>
+<button class="bg-gray-300 hover:bg-gray-400 dark:bg-zinc-800 dark:hover:bg-zinc-700 border-b-4 border-gray-400 dark:border-zinc-600 rounded-sm text-sm font-bold uppercase tracking-wide flex items-center justify-center transition-all active:border-b-0 active:translate-y-1">
+                Net
+            </button>
+<button class="bg-gray-300 hover:bg-gray-400 dark:bg-zinc-800 dark:hover:bg-zinc-700 border-b-4 border-gray-400 dark:border-zinc-600 rounded-sm text-sm font-bold uppercase tracking-wide flex items-center justify-center transition-all active:border-b-0 active:translate-y-1">
+                Power
+            </button>
+<button class="bg-gray-300 hover:bg-gray-400 dark:bg-zinc-800 dark:hover:bg-zinc-700 border-b-4 border-gray-400 dark:border-zinc-600 rounded-sm text-sm font-bold uppercase tracking-wide flex items-center justify-center transition-all active:border-b-0 active:translate-y-1">
+                Sec
+            </button>
+</div>
+<div class="flex items-center gap-3 border-l border-gray-300 dark:border-zinc-700 pl-4">
+<button class="w-10 h-10 rounded-full bg-gray-300 dark:bg-zinc-800 border-2 border-gray-400 dark:border-zinc-600 flex items-center justify-center font-display font-bold text-xs hover:border-primary dark:hover:border-primary transition-colors shadow-inner">
+                B13
+            </button>
+<div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 border-2 border-red-400 flex items-center justify-center text-red-500 animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)]">
+<span class="material-icons">warning</span>
+</div>
+</div>
+</footer>
+<script>
+        // Simple script to toggle dark mode manually if needed for demo purposes, 
+        // though it defaults to system preference via Tailwind's media strategy usually. 
+        // Since we used 'class' strategy in config, let's add a tiny invisible trigger or just init based on logic.
+        // Check local storage or system preference
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark')
+        } else {
+            document.documentElement.classList.remove('dark')
+        }
+        // Optional: Expose a function to toggle it via console
+        window.toggleTheme = function() {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.theme = 'light';
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.theme = 'dark';
+            }
+        }
+    </script>
+
+</body></html>
