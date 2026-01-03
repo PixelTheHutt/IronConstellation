@@ -6,8 +6,10 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>Main Control Panel Interface</title>
     
-    <script src="{% static 'game/config.js' %}"></script>
+    <link rel="icon" href="data:,">
+
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <script src="{% static 'game/config.js' %}"></script>
     
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
@@ -54,12 +56,12 @@
     <main class="flex-1 p-3 grid grid-cols-12 gap-3 overflow-hidden min-h-0 bg-gray-200 dark:bg-black/20">
         <aside class="col-span-12 md:col-span-3 lg:col-span-3 flex flex-col gap-2 min-h-0 h-full">
             <div class="flex-1 bg-white dark:bg-panel-dark border border-gray-300 dark:border-zinc-700 rounded-lg p-4 flex flex-col shadow-sm relative overflow-hidden group">
-                <div class="absolute top-0 right-0 p-2 opacity-50 font-display text-xs text-gray-400">P-01</div>
-                <h2 class="text-xl font-bold mb-4 flex items-center gap-2 text-gray-700 dark:text-gray-200">
+                <div class="absolute top-0 right-0 p-2 opacity-50 font-display text-xs text-black dark:text-gray-400">P-01</div>
+                <h2 class="text-xl font-bold mb-4 flex items-center gap-2 text-black dark:text-gray-200">
                     <span class="w-2 h-6 bg-primary rounded-sm"></span>
                     Panel 1
                 </h2>
-                <div id="panel-1-content" class="flex-1 bg-gray-100 dark:bg-zinc-900/50 rounded border border-gray-200 dark:border-zinc-800 p-4 font-display text-sm text-gray-500 dark:text-gray-300 overflow-y-auto">
+                <div id="panel-1-content" class="flex-1 bg-gray-100 dark:bg-zinc-900/50 rounded border border-gray-200 dark:border-zinc-800 p-4 font-display text-sm text-black dark:text-gray-300 overflow-y-auto">
                     <p class="opacity-50 italic">Select a grid cell to view details.</p>
                 </div>
             </div>

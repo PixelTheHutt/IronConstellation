@@ -94,25 +94,52 @@ export function updatePanel1(callbacks) {
 
     // === PLANET VIEW ===
     if (gameState.currentView === 'planet') {
-        panel.innerHTML = `
-            <div class="mb-4">
-                <div class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Current Location</div>
-                <div class="text-lg font-mono text-primary dark:text-blue-400 font-bold">PLANET SURFACE</div>
-            </div>
-            <div class="p-3 bg-blue-100 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-800 rounded mb-2">
-                <div class="text-blue-600 dark:text-blue-400 font-bold flex items-center gap-2">
-                    <span class="material-icons text-sm">public</span> PLANET P-${gameState.activePlanet.id}
+        if (gameState.selectedPlanetHex) {
+            // -- SELECTED HEX DETAILS --
+            const hex = gameState.selectedPlanetHex;
+            panel.innerHTML = `
+                <div class="mb-4">
+                    <div class="text-xs font-bold text-black dark:text-gray-400 uppercase">Terrain Analysis</div>
+                    <div class="text-lg font-mono text-primary dark:text-blue-400 font-bold">${hex.terrain.toUpperCase()}</div>
                 </div>
-                <div class="text-xs text-gray-600 dark:text-gray-300 mt-1">
-                    Type: ${gameState.activePlanet.type}<br>
-                    Orbit Radius: ${gameState.activePlanet.orbitRadius}<br>
-                    Atmosphere: ${gameState.activePlanet.atmosphere}
+                <div class="p-3 bg-green-100 dark:bg-green-900/20 border border-green-300 dark:border-green-800 rounded mb-2">
+                    <div class="text-green-800 dark:text-green-400 font-bold flex items-center gap-2">
+                        <span class="material-icons text-sm">landscape</span> SECTOR DATA
+                    </div>
+                    <div class="text-xs text-black dark:text-gray-300 mt-1">
+                        Grid ID: ${hex.coordinate}<br>
+                        Elevation Noise: ${hex.noise}<br>
+                        Status: Unoccupied
+                    </div>
                 </div>
-            </div>
-            <div class="mt-4 border-t border-gray-200 dark:border-zinc-700 pt-2">
-                    <div class="text-xs text-gray-500 dark:text-gray-400 italic">Planetary Grid: Icosahedral Projection</div>
-            </div>
-        `;
+                <div class="mt-4 border-t border-gray-200 dark:border-zinc-700 pt-2">
+                    <div class="text-xs text-black dark:text-gray-400 italic">
+                        Click empty space to return to planet overview.
+                    </div>
+                </div>
+            `;
+        } else {
+            // -- GENERAL PLANET OVERVIEW --
+            panel.innerHTML = `
+                <div class="mb-4">
+                    <div class="text-xs font-bold text-black dark:text-gray-400 uppercase">Current Location</div>
+                    <div class="text-lg font-mono text-primary dark:text-blue-400 font-bold">PLANET SURFACE</div>
+                </div>
+                <div class="p-3 bg-blue-100 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-800 rounded mb-2">
+                    <div class="text-blue-600 dark:text-blue-400 font-bold flex items-center gap-2">
+                        <span class="material-icons text-sm">public</span> PLANET P-${gameState.activePlanet.id}
+                    </div>
+                    <div class="text-xs text-black dark:text-gray-300 mt-1">
+                        Type: ${gameState.activePlanet.type}<br>
+                        Orbit Radius: ${gameState.activePlanet.orbitRadius}<br>
+                        Atmosphere: ${gameState.activePlanet.atmosphere}
+                    </div>
+                </div>
+                <div class="mt-4 border-t border-gray-200 dark:border-zinc-700 pt-2">
+                        <div class="text-xs text-black dark:text-gray-400 italic">Select a grid cell to inspect terrain.</div>
+                </div>
+            `;
+        }
         return;
     }
 
@@ -120,9 +147,9 @@ export function updatePanel1(callbacks) {
     if (gameState.currentView === 'system') {
         let html = `
             <div class="mb-4">
-                <div class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Current Location</div>
+                <div class="text-xs font-bold text-black dark:text-gray-400 uppercase">Current Location</div>
                 <div class="text-lg font-mono text-primary dark:text-blue-400 font-bold">SYSTEM VIEW</div>
-                <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Coordinates: [ ${gameState.activeSystem.x}, ${gameState.activeSystem.y} ]</div>
+                <div class="text-xs text-black dark:text-gray-400 mt-1">Coordinates: [ ${gameState.activeSystem.x}, ${gameState.activeSystem.y} ]</div>
             </div>
         `;
 
@@ -132,7 +159,7 @@ export function updatePanel1(callbacks) {
                     <div class="text-blue-600 dark:text-blue-400 font-bold flex items-center gap-2">
                         <span class="material-icons text-sm">public</span> SELECTED PLANET
                     </div>
-                    <div class="text-xs text-gray-600 dark:text-gray-300 mt-1">
+                    <div class="text-xs text-black dark:text-gray-300 mt-1">
                         Type: ${gameState.selectedPlanet.type}<br>
                         Click enter to initiate landing sequence.
                     </div>
@@ -141,7 +168,7 @@ export function updatePanel1(callbacks) {
                     <span class="material-icons text-sm">login</span> Enter Planet
                 </button>
                 <div class="mt-4 border-t border-gray-200 dark:border-zinc-700 pt-2">
-                        <div class="text-xs text-gray-500 dark:text-gray-400 italic">Select the Star or empty space to clear selection.</div>
+                        <div class="text-xs text-black dark:text-gray-400 italic">Select the Star or empty space to clear selection.</div>
                 </div>
             `;
         } else {
@@ -151,13 +178,13 @@ export function updatePanel1(callbacks) {
                     <div class="text-yellow-600 dark:text-yellow-400 font-bold flex items-center gap-2">
                         <span class="material-icons text-sm">wb_sunny</span> LOCAL STAR
                     </div>
-                    <div class="text-xs text-gray-600 dark:text-gray-300 mt-1">Class G Yellow Dwarf.</div>
+                    <div class="text-xs text-black dark:text-gray-300 mt-1">Class G Yellow Dwarf.</div>
                 </div>
                 <div class="mt-4">
-                    <div class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">System Data</div>
+                    <div class="text-xs font-bold text-black dark:text-gray-400 uppercase mb-2">System Data</div>
                     <div class="flex items-center justify-between text-sm border-b border-gray-200 dark:border-zinc-700 py-1">
-                        <span class="text-gray-600 dark:text-gray-300">Planets Detected:</span>
-                        <span class="font-mono font-bold text-gray-700 dark:text-gray-200">${pCount}</span>
+                        <span class="text-black dark:text-gray-300">Planets Detected:</span>
+                        <span class="font-mono font-bold text-black dark:text-gray-200">${pCount}</span>
                     </div>
                 </div>
             `;
@@ -176,7 +203,7 @@ export function updatePanel1(callbacks) {
 
     // === SECTOR VIEW ===
     if (!gameState.selectedCell) {
-        panel.innerHTML = `<p class="opacity-50 italic text-gray-500 dark:text-gray-400">Select a grid cell to view details.</p>`;
+        panel.innerHTML = `<p class="opacity-50 italic text-black dark:text-gray-400">Select a grid cell to view details.</p>`;
         return;
     }
 
@@ -187,7 +214,7 @@ export function updatePanel1(callbacks) {
 
     let contentHtml = `
         <div class="mb-4">
-            <div class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Coordinates</div>
+            <div class="text-xs font-bold text-black dark:text-gray-400 uppercase">Coordinates</div>
             <div class="text-lg font-mono text-primary dark:text-blue-400">[ ${cell.x}, ${cell.y} ]</div>
         </div>
     `;
@@ -200,7 +227,7 @@ export function updatePanel1(callbacks) {
                 <div class="text-red-600 dark:text-red-400 font-bold flex items-center gap-2">
                     <span class="material-icons text-sm">warning</span> PIRATE FLEET
                 </div>
-                <div class="text-xs text-gray-600 dark:text-gray-300 mt-1">Hostile entities detected. High threat level.</div>
+                <div class="text-xs text-black dark:text-gray-300 mt-1">Hostile entities detected. High threat level.</div>
             </div>
         `;
         statusFound = true;
@@ -212,7 +239,7 @@ export function updatePanel1(callbacks) {
                 <div class="text-blue-600 dark:text-blue-400 font-bold flex items-center gap-2">
                     <span class="material-icons text-sm">wb_sunny</span> STAR SYSTEM
                 </div>
-                <div class="text-xs text-gray-600 dark:text-gray-300 mt-1">G-type main sequence star. Local planets detected.</div>
+                <div class="text-xs text-black dark:text-gray-300 mt-1">G-type main sequence star. Local planets detected.</div>
             </div>
             <button id="btn-enter-system" class="w-full mt-2 bg-primary hover:bg-blue-600 text-white font-bold py-2 px-4 rounded shadow transition-colors flex items-center justify-center gap-2">
                 <span class="material-icons text-sm">login</span> Enter System
@@ -227,7 +254,7 @@ export function updatePanel1(callbacks) {
                 <div class="text-purple-600 dark:text-purple-400 font-bold flex items-center gap-2">
                     <span class="material-icons text-sm">blur_on</span> NEBULA
                 </div>
-                <div class="text-xs text-gray-600 dark:text-gray-300 mt-1">Ionized gas cloud. Sensor interference high.</div>
+                <div class="text-xs text-black dark:text-gray-300 mt-1">Ionized gas cloud. Sensor interference high.</div>
             </div>
         `;
         statusFound = true;
@@ -235,7 +262,7 @@ export function updatePanel1(callbacks) {
 
     if (!statusFound) {
         contentHtml += `
-            <div class="text-sm text-gray-500 dark:text-gray-400 italic">
+            <div class="text-sm text-black dark:text-gray-400 italic">
                 Empty Space.
             </div>
         `;

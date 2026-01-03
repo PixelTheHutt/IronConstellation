@@ -11,6 +11,8 @@ const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 10;
 
 let nebulaPattern = null;
+let lastErrorLogTime = 0; // Throttle for render loop warnings
+let lastHitLogTime = 0;   // Throttle for mouse move logs
 
 /*
     Here, we define a helper to create the nebula pattern pattern if it doesn't exist.
@@ -31,6 +33,14 @@ function createNebulaPattern(ctx) {
         pCtx.fill();
     }
     return ctx.createPattern(pCanvas, 'repeat');
+}
+
+/*
+    Helper: Generate a unique ID based on 3D coordinates.
+    We use toFixed(2) to avoid floating point rounding flip-flops at boundaries.
+*/
+function get3DHexID(p3) {
+    return `${p3.x.toFixed(2)},${p3.y.toFixed(2)},${p3.z.toFixed(2)}`;
 }
 
 /*
@@ -76,47 +86,9 @@ export function render(canvas, ctx, state, mapData) {
     Then, we implement the Sector Map renderer (The Grid).
 */
 function drawSector(ctx, state, mapData, width, height) {
-    const size = Math.min(width, height);
-    // Use the camera zoom inverse to keep lines consistent if desired, or fixed.
-    // Logic adapted from original script.
-    
-    // Note: The original logic calculated cellSize based on screen size, 
-    // effectively making the map fit the screen at zoom 1.
-    const cellSize = 10; // Base unit size, scaled by camera effectively.
-    // Wait, original logic: const cellSize = size / GRID_SIZE; 
-    // This depends on the passed width/height which are screen dimensions.
-    // We should recalculate it here to match the original behavior.
-    
-    // We need to know the 'base' size for the grid.
-    // If we want it to look the same, we need the rect passed in.
-    // However, we are inside a transformed context.
-    // The original logic was: const cellSize = size / GRID_SIZE;
-    // And drawing happened at x * cellSize.
-    
-    // Let's use a fixed large size for the map world space to make zooming logical.
+    // Use a fixed large size for the map world space to make zooming logical.
     const WORLD_SIZE = 10000; 
     const effectiveCellSize = WORLD_SIZE / GRID_SIZE;
-    
-    // Original Logic Re-evaluation:
-    // const size = Math.min(width, height);
-    // const cellSize = size / GRID_SIZE;
-    // It calculated cell size based on the *current* canvas size.
-    // But since we are zoomed/panned, the 'width' and 'height' passed to this function
-    // are the *screen* dimensions.
-    
-    // To maintain the exact behavior where "zoom 1 fits the screen", 
-    // we should use the screen dimensions to determine the base scale.
-    // But wait, if we resize the window, the map stretches?
-    // Yes, the original code did: const size = Math.min(rect.width, rect.height).
-    
-    // To preserve this exactly:
-    const baseSize = Math.min(width, height) / state.camera.zoom; 
-    // We divide by zoom because we are already scaled by zoom in the context?
-    // No. The original code calculated cellSize from raw rect, THEN applied translate/scale.
-    // But the coordinates (x*cellSize) were constant relative to the grid.
-    // We need a stable world definition.
-    // For this refactor, let's fix the world size to a stable value so resizing doesn't warp the map coordinates.
-    // This is an improvement. Let's fix the map to 2000x2000 units.
     
     const FIXED_MAP_SIZE = 2000;
     const finalCellSize = FIXED_MAP_SIZE / GRID_SIZE;
@@ -316,20 +288,20 @@ function drawPlanet(ctx, state) {
         const lowNextPlus = ((i + 2) % 5) + 6; 
 
         // Triangle 1: North Polar (Up)
-        drawLocalTriangle(ctx, xBase, startY + H, S, H, 'up', V[upCurrent], V[upNext], V[0], colors, hexRadius, activePlanet);
+        drawLocalTriangle(ctx, xBase, startY + H, S, H, 'up', V[upCurrent], V[upNext], V[0], colors, hexRadius, activePlanet, `g${i}-t0`, state);
         
         // Triangle 2: North Temperate (Down)
-        drawLocalTriangle(ctx, xBase, startY + H, S, H, 'down', V[upCurrent], V[upNext], V[lowNext], colors, hexRadius, activePlanet);
+        drawLocalTriangle(ctx, xBase, startY + H, S, H, 'down', V[upCurrent], V[upNext], V[lowNext], colors, hexRadius, activePlanet, `g${i}-t1`, state);
         
         // Triangle 3: South Temperate (Up)
-        drawLocalTriangle(ctx, xBase + S/2, startY + 2*H, S, H, 'up', V[lowNext], V[lowNextPlus], V[upNext], colors, hexRadius, activePlanet);
+        drawLocalTriangle(ctx, xBase + S/2, startY + 2*H, S, H, 'up', V[lowNext], V[lowNextPlus], V[upNext], colors, hexRadius, activePlanet, `g${i}-t2`, state);
         
         // Triangle 4: South Polar (Down)
-        drawLocalTriangle(ctx, xBase + S/2, startY + 2*H, S, H, 'down', V[lowNext], V[lowNextPlus], V[11], colors, hexRadius, activePlanet);
+        drawLocalTriangle(ctx, xBase + S/2, startY + 2*H, S, H, 'down', V[lowNext], V[lowNextPlus], V[11], colors, hexRadius, activePlanet, `g${i}-t3`, state);
     }
 }
 
-function drawLocalTriangle(ctx, offsetX, offsetY, S, H, orientation, v1, v2, v3, colors, hexRadius, activePlanet) {
+function drawLocalTriangle(ctx, offsetX, offsetY, S, H, orientation, v1, v2, v3, colors, hexRadius, activePlanet, prefixId, state) {
     ctx.save();
     ctx.translate(offsetX, offsetY);
     
@@ -392,10 +364,53 @@ function drawLocalTriangle(ctx, offsetX, offsetY, S, H, orientation, v1, v2, v3,
             else if (noiseVal > waterLevel) { color = colors.land; }
             else if (noiseVal > (waterLevel - 0.1)) { color = colors.oceanShallow; } 
 
+            // Use 3D ID for consistent selection across triangle seams
+            const hexId = get3DHexID(p3);
+            
+            // Check selections
+            let isHovered = (state && state.hoveredPlanetHex && state.hoveredPlanetHex.id === hexId);
+            let isSelected = (state && state.selectedPlanetHex && state.selectedPlanetHex.id === hexId);
+
+            // --- DEBUG LOGGING ---
+            // If this exact grid cell (row/col) is what the user is hovering over,
+            // but the ID didn't match, we have a floating point error.
+            if (state && state.hoveredPlanetHex) {
+                 const currentCoord = `R${row}:C${col}`;
+                 // Check if the current grid cell matches the one we found earlier in getPlanetHexAt
+                 if (state.hoveredPlanetHex.coordinate === currentCoord) {
+                     if (!isHovered) {
+                         const now = Date.now();
+                         if (now - lastErrorLogTime > 1000) {
+                             // IDs didn't match!
+                             console.warn("HIGHLIGHT FAIL: Grid Coords Match but IDs do not.");
+                             console.warn("  Render ID:", hexId);
+                             console.warn("  Hover  ID:", state.hoveredPlanetHex.id);
+                             console.warn("  Diff:", 
+                                Math.abs(parseFloat(hexId.split(',')[0]) - parseFloat(state.hoveredPlanetHex.id.split(',')[0])),
+                                Math.abs(parseFloat(hexId.split(',')[1]) - parseFloat(state.hoveredPlanetHex.id.split(',')[1])),
+                                Math.abs(parseFloat(hexId.split(',')[2]) - parseFloat(state.hoveredPlanetHex.id.split(',')[2]))
+                             );
+                             lastErrorLogTime = now;
+                         }
+                     }
+                 }
+            }
+            // ---------------------
+
             if (color) {
-                drawHex(ctx, cx, cy, hexRadius, color, colors.grid);
+                if (isSelected) {
+                    drawHex(ctx, cx, cy, hexRadius, "#00FFFF", "#00FFFF", 2);
+                    drawHex(ctx, cx, cy, hexRadius * 0.8, color, null);
+                } else if (isHovered) {
+                    drawHex(ctx, cx, cy, hexRadius, "#FFFFFF", "#FFFFFF", 2);
+                    drawHex(ctx, cx, cy, hexRadius * 0.9, color, null);
+                } else {
+                    drawHex(ctx, cx, cy, hexRadius, color, colors.grid);
+                }
             } else {
-                drawHex(ctx, cx, cy, hexRadius, null, colors.grid);
+                if (isSelected) drawHex(ctx, cx, cy, hexRadius, "rgba(0,255,255,0.2)", "#00FFFF");
+                else if (isHovered) drawHex(ctx, cx, cy, hexRadius, "rgba(255,255,255,0.2)", "#FFFFFF");
+                else drawHex(ctx, cx, cy, hexRadius, null, colors.grid);
             }
         }
     }
@@ -412,7 +427,7 @@ function drawLocalTriangle(ctx, offsetX, offsetY, S, H, orientation, v1, v2, v3,
     ctx.restore();
 }
 
-function drawHex(ctx, cx, cy, r, fillColor, strokeColor) {
+function drawHex(ctx, cx, cy, r, fillColor, strokeColor, lineWidth = 0.5) {
     ctx.beginPath();
     for (let k = 0; k < 6; k++) {
         const ang = Math.PI/3 * k + Math.PI/6;
@@ -423,7 +438,132 @@ function drawHex(ctx, cx, cy, r, fillColor, strokeColor) {
         ctx.fillStyle = fillColor;
         ctx.fill();
     }
-    ctx.strokeStyle = strokeColor;
-    ctx.lineWidth = 0.5;
-    ctx.stroke();
+    if (strokeColor) {
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = lineWidth;
+        ctx.stroke();
+    }
+}
+
+/*
+    Exported Helper to find a hex at world coordinates (x, y).
+    Mirrors the projection logic of drawPlanet.
+    Returns { id, terrain, p3 } or null.
+*/
+export function getPlanetHexAt(worldX, worldY, state) {
+    const activePlanet = state.activePlanet;
+    if (!activePlanet) return null;
+
+    const S = 300; 
+    const H = S * (Math.sqrt(3) / 2);
+    
+    const mapW = 5.5 * S;
+    const mapH = 3 * H;
+    
+    const startX = -mapW / 2;
+    const startY = -mapH / 2;
+    
+    const targetHexW = S / 10;
+    const hexWidth = targetHexW;
+    const hexRadius = hexWidth / Math.sqrt(3);
+    
+    // Used for hit testing tolerance
+    const hitRadiusSq = (hexRadius * 0.9) ** 2; 
+
+    const V = verts;
+
+    // Iterate 5 Gores
+    for(let i = 0; i < 5; i++) {
+        const xBase = startX + i * S;
+        const nextI = (i + 1) % 5;
+        
+        const upCurrent = i + 1; 
+        const upNext = nextI + 1;
+        const lowCurrent = i + 6; 
+        const lowNext = nextI + 6;
+        const lowNextPlus = ((i + 2) % 5) + 6; 
+
+        // 4 Triangles per Gore
+        const triangles = [
+            { id: `g${i}-t0`, type: 'up',   offX: xBase,       offY: startY + H,   v1: V[upCurrent], v2: V[upNext],      v3: V[0] },
+            { id: `g${i}-t1`, type: 'down', offX: xBase,       offY: startY + H,   v1: V[upCurrent], v2: V[upNext],      v3: V[lowNext] },
+            { id: `g${i}-t2`, type: 'up',   offX: xBase + S/2, offY: startY + 2*H, v1: V[lowNext],   v2: V[lowNextPlus], v3: V[upNext] },
+            { id: `g${i}-t3`, type: 'down', offX: xBase + S/2, offY: startY + 2*H, v1: V[lowNext],   v2: V[lowNextPlus], v3: V[11] }
+        ];
+
+        for (const tri of triangles) {
+            // Check bounding box optimization could go here, but brute force is fast enough for <1000 hexes.
+            
+            // Reconstruct Grid Loop
+            let tX1, tY1, tX2, tY2, tX3, tY3;
+            if (tri.type === 'up') {
+                tX1 = 0; tY1 = 0; tX2 = S; tY2 = 0; tX3 = S/2; tY3 = -H;  
+            } else {
+                tX1 = 0; tY1 = 0; tX2 = S; tY2 = 0; tX3 = S/2; tY3 = H;   
+            }
+
+            const hexW = Math.sqrt(3) * hexRadius;
+            const vertDist = 1.5 * hexRadius;
+            
+            const rows = Math.ceil(H / vertDist) + 2;
+            const cols = Math.ceil(S / hexW) + 2;
+
+            for (let row = -rows; row < rows; row++) {
+                const xOffset = (row % 2) * (hexW / 2);
+                for (let col = -2; col < cols; col++) {
+                    const cx = col * hexW + xOffset;
+                    const cy = row * vertDist;
+
+                    // World Position of this hex center
+                    const hexWorldX = tri.offX + cx;
+                    const hexWorldY = tri.offY + cy;
+
+                    const dx = worldX - hexWorldX;
+                    const dy = worldY - hexWorldY;
+
+                    if (dx*dx + dy*dy < hitRadiusSq) {
+                        // HIT! Calculate details.
+                        const {u, v, w} = getBarycentric(cx, cy, tX1, tY1, tX2, tY2, tX3, tY3);
+                        if (u < -0.1 || v < -0.1 || w < -0.1) continue; // Out of bounds logic matches drawer
+
+                        const p3 = {
+                            x: u*tri.v1.x + v*tri.v2.x + w*tri.v3.x,
+                            y: u*tri.v1.y + v*tri.v2.y + w*tri.v3.y,
+                            z: u*tri.v1.z + v*tri.v2.z + w*tri.v3.z
+                        };
+
+                        const seed = activePlanet.seed;
+                        const hydro = activePlanet.hydro;
+                        const noiseVal = get3DNoise(p3.x, p3.y, p3.z, seed);
+                        const waterLevel = hydro / 100.0;
+                        
+                        let terrain = "Plains";
+                        if (Math.abs(p3.y) > 0.90) terrain = "Ice Cap"; 
+                        else if (noiseVal > (waterLevel + 0.4)) terrain = "Mountain Peak";
+                        else if (noiseVal > (waterLevel + 0.2)) terrain = "Mountains";
+                        else if (noiseVal > (waterLevel + 0.1)) terrain = "Forest";
+                        else if (noiseVal > waterLevel) terrain = "Grassland";
+                        else if (noiseVal > (waterLevel - 0.1)) terrain = "Shallow Ocean";
+                        else terrain = "Deep Ocean";
+                        
+                        // LOG HIT FOR DEBUGGING
+                        const now = Date.now();
+                        if (now - lastHitLogTime > 1000) {
+                            const id = get3DHexID(p3);
+                            console.log("HIT HEX:", id, "p3:", p3);
+                            lastHitLogTime = now;
+                        }
+
+                        return {
+                            id: get3DHexID(p3), // Use Universal 3D ID
+                            terrain: terrain,
+                            coordinate: `R${row}:C${col}`,
+                            noise: noiseVal.toFixed(2)
+                        };
+                    }
+                }
+            }
+        }
+    }
+    return null;
 }

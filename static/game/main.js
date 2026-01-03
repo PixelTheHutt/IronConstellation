@@ -1,5 +1,5 @@
 import { gameState, mapData, initMapData } from './state.js';
-import { render } from './renderers.js';
+import { render, getPlanetHexAt } from './renderers.js';
 import { initUI, updatePanel1, updateBackButtonState, updateNavigation } from './ui.js';
 
 /*
@@ -116,14 +116,27 @@ function handleMouseMove(e) {
         }
     }
 
-    // 2. Handle Hover (only relevant for Sector View)
+    // 2. Handle Hover
     if (gameState.currentView === 'sector') {
         const gridCoords = getGridCoordinates(e.clientX, e.clientY);
         if (!gameState.hoveredCell || !gridCoords || gameState.hoveredCell.x !== gridCoords.x || gameState.hoveredCell.y !== gridCoords.y) {
             gameState.hoveredCell = gridCoords;
         }
-    } else {
+        gameState.hoveredPlanetHex = null;
+    } 
+    else if (gameState.currentView === 'planet') {
+        const worldCoords = getWorldCoordinates(e.clientX, e.clientY);
+        const hex = getPlanetHexAt(worldCoords.x, worldCoords.y, gameState);
+        
+        // Update state if changed
+        if (hex !== gameState.hoveredPlanetHex) {
+             gameState.hoveredPlanetHex = hex;
+        }
         gameState.hoveredCell = null;
+    }
+    else {
+        gameState.hoveredCell = null;
+        gameState.hoveredPlanetHex = null;
     }
 }
 
@@ -140,8 +153,31 @@ function handleMouseUp(e) {
                     onEnterPlanet: handleEnterPlanet
                 });
             }
-        } else if (gameState.currentView === 'system') {
+        } 
+        else if (gameState.currentView === 'system') {
             handleSystemClick(e.clientX, e.clientY);
+        }
+        else if (gameState.currentView === 'planet') {
+             const worldCoords = getWorldCoordinates(e.clientX, e.clientY);
+             const hex = getPlanetHexAt(worldCoords.x, worldCoords.y, gameState);
+             
+             // Toggle selection or select new
+             if (hex) {
+                 if (gameState.selectedPlanetHex && gameState.selectedPlanetHex.id === hex.id) {
+                     // Deselect if clicking same
+                     gameState.selectedPlanetHex = null;
+                 } else {
+                     gameState.selectedPlanetHex = hex;
+                 }
+             } else {
+                 // Clicked empty space
+                 gameState.selectedPlanetHex = null;
+             }
+             
+             updatePanel1({
+                onEnterSystem: handleEnterSystem,
+                onEnterPlanet: handleEnterPlanet
+             });
         }
     }
     
@@ -220,6 +256,8 @@ function handleBack() {
         gameState.camera = { ...gameState.savedSystemCamera };
         gameState.currentView = 'system';
         gameState.activePlanet = null;
+        gameState.selectedPlanetHex = null; // Clear hex selection
+        gameState.hoveredPlanetHex = null;
     } else if (gameState.currentView === 'system') {
         // Exit System -> Sector
         gameState.camera = { ...gameState.savedSectorCamera };
@@ -291,6 +329,7 @@ function handleEnterPlanet(planet) {
     gameState.savedSystemCamera = { ...gameState.camera };
     gameState.currentView = 'planet';
     gameState.activePlanet = planet;
+    gameState.selectedPlanetHex = null;
 
     if (canvas) {
         const rect = canvas.getBoundingClientRect();

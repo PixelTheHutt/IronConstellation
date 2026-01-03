@@ -22,7 +22,11 @@ export const gameState = {
     // User Selections
     selectedCell: null,   // Sector View
     selectedPlanet: null, // System View
-    hoveredCell: null     // Sector View
+    hoveredCell: null,    // Sector View
+
+    // Planet View Selections
+    hoveredPlanetHex: null,
+    selectedPlanetHex: null
 };
 
 /*
